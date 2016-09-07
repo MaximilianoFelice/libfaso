@@ -1,0 +1,3 @@
+[submodule "osada-tools"]
+	path = osada-tools
+	url = git@github.com:sisoputnfrba/osada-tools.git
