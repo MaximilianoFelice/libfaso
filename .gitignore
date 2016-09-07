@@ -54,3 +54,6 @@ Debug/*
 
 # Log
 *.log
+
+# Test Folder
+test-files/*
