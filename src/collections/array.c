@@ -15,7 +15,7 @@ int _array_has_next(iterable* array, array_metadata* metadata){
 
 void _array_metadata_free(array_metadata* metadata){}
 
-void _array_init_metadata(array_metadata* metadata, size_t length){
+void _array_metadata_init(array_metadata* metadata, size_t length){
 	metadata->length = length;
 }
 

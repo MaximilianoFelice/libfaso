@@ -69,7 +69,7 @@ void* next(iterable* iterator);
 		type->next = __##type##_next; \
 		type->has_next = __##type##_has_next; \
 		type->metadata = metadata; \
-		_##type##_init_metadata(type->metadata, args); \
+		_##type##_metadata_init(type->metadata, args); \
 		\
 		return type; \
 	}
