@@ -39,9 +39,12 @@ static DiskZone* init_zone(Disk* disk, zone_attr attr, uint64_t blocks){
 	DiskZone* zone = malloc(sizeof(DiskZone));
 	uint64_t offset = zone_offset(disk);
 
+	char* zone_start = (char*) (disk->head + (offset * disk->block_size));
+
 	*(zone_attr*)&zone->attr = attr;
 	*(uint64_t*)&zone->size = blocks;
 	*(uint64_t*)&zone->offset = offset;
+	*(char**)&zone->start = zone_start;
 	*(DiskZone**)&zone->next = NULL;
 
 	if (disk->zones == NULL)
@@ -70,6 +73,15 @@ void free_disk(Disk* disk){
 
 /* Resources Operations */
 
+char* get_zone(DiskZone* zone, int depth){
+	if (depth == 0) return (char*) zone->start;
+	else return get_zone(zone->next, depth-1);
+}
+
+char* get(Disk* disk, int zone){
+	return get_zone(disk->zones, zone);
+}
+
 uint64_t size(int fd){
 	struct stat sbuf;
 	if (fstat(fd, &sbuf) < 0) return errno;
@@ -82,10 +94,9 @@ void operate_disk(Disk* disk){
 
 void operate_flags(Disk* disk, DiskZone* zone){
 	zone_attr att = zone->attr;
-	char* zone_start = (char*) (disk->head + (zone->offset * disk->block_size));
 
 	if (att & (1 << IMPORTANT))
-		mlock(zone_start, zone->size * disk->block_size);
+		mlock(zone->start, zone->size * disk->block_size);
 }
 
 Disk* open_disk(int fd, uint64_t block_size){

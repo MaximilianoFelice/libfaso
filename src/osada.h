@@ -25,12 +25,29 @@
 #define DEFAULT_FILE_PATH "/" DEFAULT_FILE_NAME
 
 #define OSADA_FILE_TABLE_BLOCKS 1024
+#define OSADA_FILE_TABLE_ENTRIES (OSADA_FILE_TABLE_BLOCKS*2)
 
 extern Disk* disk;
 
+enum {
+	DISK_HEADER,
+	DISK_BITMAP,
+	DISK_FILE_TABLE,
+	DISK_ALLOC_TABLE,
+	DISK_DATA
+};
+
+#define ROOT 0xFFFF
+
+#define HEADER ((osada_header*) get(disk, DISK_HEADER))
+#define BITMAP ((char*) get(disk, DISK_BITMAP))
+#define FILE_TABLE ((osada_file*) get(disk, DISK_FILE_TABLE))
+#define ALLOC_TABLE ((uint32_t*) get(disk, DISK_ALLOC_TABLE))
+#define DATA ((osada_block*) get(disk, DISK_DATA))
+
 /* FUSE Operations */
 int hello_getattr(const char *path, struct stat *stbuf);
-int hello_readdir(const char *path, void *buf, fuse_fill_dir_t filler,
+int osada_readdir(const char *path, void *buf, fuse_fill_dir_t filler,
 			 off_t offset, struct fuse_file_info *fi);
 int hello_open(const char *path, struct fuse_file_info *fi);
 int hello_read(const char *path, char *buf, size_t size, off_t offset,
