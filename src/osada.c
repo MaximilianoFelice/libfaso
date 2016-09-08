@@ -88,22 +88,7 @@ int alloc_table_size(Disk* disk){
 	return blocks - (alloc + data);
 }
 
-int main(int argc, char *argv[])
-{
-	/* Handling Options */
-	struct fuse_args args = FUSE_ARGS_INIT(argc, argv);
-	set_fuse_options(&args);
-	handle_fatal("Error at parsing parameters");
-
-
-	/* Opening Disk */
-	open_disk();
-
-	return fuse_main(args.argc, args.argv, &hello_oper, NULL);
-}
-
-void open_disk(){
-	int disk_descriptor = open64(runtime_options.define_disc_path, O_RDWR, 0);
+void open_osada(){
 	int disk_descriptor = open64(runtime_options.define_disc_path, O_RDWR, 0);
 	handle_fatal("Error at opening file");
 
@@ -113,6 +98,19 @@ void open_disk(){
 	add_disk_zone(disk, OSADA_FILE_TABLE_BLOCKS, IMPORTANT);
 	add_disk_zone(disk, alloc_table_size(disk), IMPORTANT);
 	add_disk_zone(disk, header(disk)->data_blocks, NORMAL);
+}
+
+int main(int argc, char *argv[])
+{
+	/* Handling Options */
+	struct fuse_args args = FUSE_ARGS_INIT(argc, argv);
+	set_fuse_options(&args);
+	handle_fatal("Error at parsing parameters");
+
+	/* Opening Disk */
+	open_osada();
+
+	return fuse_main(args.argc, args.argv, &hello_oper, NULL);
 }
 
 void unmount(){
