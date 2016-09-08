@@ -30,6 +30,7 @@ void open_osada(){
 struct fuse_operations hello_oper =  {
 	.getattr	= hello_getattr,
 	.readdir	= osada_readdir,
+	.mkdir		= osada_mkdir,
 	.open		= hello_open,
 	.read		= hello_read,
 };

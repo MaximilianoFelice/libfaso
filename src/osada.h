@@ -14,6 +14,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <fcntl.h>
+#include <libgen.h>
 #include "utils/mapping.h"
 #include "utils/errors.h"
 #include "../osada-tools/osada.h"
@@ -52,6 +53,7 @@ int osada_readdir(const char *path, void *buf, fuse_fill_dir_t filler,
 int hello_open(const char *path, struct fuse_file_info *fi);
 int hello_read(const char *path, char *buf, size_t size, off_t offset,
 		struct fuse_file_info *fi);
+int osada_mkdir(const char* path, mode_t mode);
 
 
 #endif /* SRC_OSADA_H_ */
