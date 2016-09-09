@@ -64,11 +64,25 @@ int first_free_file(osada_file* table, uint16_t offset){
 	else return first_free_file(table + 1, offset + 1);
 }
 
+int set_in_file(osada_file* dir, osada_block_pointer first_block,
+				 uint32_t size, char* bname, uint16_t parent,
+				 uint32_t lastmod, osada_file_state type){
+
+	if (strlen(bname) > sizeof_member(osada_file, fname)) return errno = -ENAMETOOLONG;
+
+	dir->first_block = first_block;
+	 dir->file_size = size;
+	memcpy(&(dir->fname), bname, strlen(bname));
+	dir->parent_directory = parent;
+	dir->lastmod = lastmod;
+	dir->state = type;
+
+	return 0;
+}
+
 osada_file* create_file(osada_block_pointer first_block,
 				 uint32_t size, char* bname, uint16_t parent,
 				 uint32_t lastmod, osada_file_state type){
-	errno_clear;
-
 	first_file_matching(FILE_TABLE, 0, bname, parent);
 	switch(errno){
 		case -ENOENT:
@@ -82,12 +96,7 @@ osada_file* create_file(osada_block_pointer first_block,
 
 	osada_file* dir = FILE_TABLE + block;
 
-	dir->first_block = first_block;
-	dir->file_size = size;
-	memcpy(&(dir->fname), bname, strlen(bname));
-	dir->parent_directory = parent;
-	dir->lastmod = lastmod;
-	dir->state = type;
+	set_in_file(dir, first_block, size, bname, parent, lastmod, type);
 
 	return dir;
 }

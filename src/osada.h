@@ -30,6 +30,7 @@
 #define OSADA_FILE_TABLE_BLOCKS 1024
 #define OSADA_FILE_TABLE_ENTRIES (OSADA_FILE_TABLE_BLOCKS*2)
 
+#define sizeof_member(type, member) sizeof(((type *)0)->member)
 
 typedef struct OsadaZones {
 	iterable* file_table;
@@ -65,6 +66,7 @@ int hello_read(const char *path, char *buf, size_t size, off_t offset,
 		struct fuse_file_info *fi);
 int osada_mkdir(const char* path, mode_t mode);
 int osada_rmdir (const char* path);
+int osada_rename (const char* oldpath, const char* newpath);
 
 
 #endif /* SRC_OSADA_H_ */

@@ -38,7 +38,7 @@ struct fuse_operations hello_oper =  {
 	.open		= osada_open,
 	.read		= hello_read,
 	.rmdir 		= osada_rmdir,
-	//.rename 	= osada_rename,
+	.rename 	= osada_rename,
 
 	/*
 		.read = grasa_read,			// OK
@@ -70,7 +70,6 @@ void fusermount(struct fuse_args* args){
 	memcpy(command, com, com_size);
 	memcpy(command + com_size, mountpoint, mount_size);
 	errno = system(command);
-	handle_fatal("There's a mount at path that couldn't be unmount. Check that you set [MOUNTPOINT] as last parameter.");
 	free(command);
 }
 
@@ -90,6 +89,7 @@ int main(int argc, char *argv[])
 
 	/* Unmounting previous FS */
 	fusermount(&args);
+	handle_silent("There's a mount at path that couldn't be unmount. Check that you set [MOUNTPOINT] as last parameter.");
 
 	/* Opening Disk */
 	open_osada();

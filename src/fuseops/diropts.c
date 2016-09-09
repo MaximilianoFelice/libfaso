@@ -74,8 +74,8 @@ int osada_readdir(const char *path, void *buf, fuse_fill_dir_t filler, off_t off
 int osada_mkdir(const char* path, mode_t mode){
 	errno_clear;
 
-	char* bname = basename(strdup(path));
 	char* dname = dirname(strdup(path));
+	char* bname = basename(strdup(path));
 
 	uint16_t parent = file_for_path(dname);
 	handle_return("Cannot find block for dirname");
@@ -88,6 +88,8 @@ int osada_mkdir(const char* path, mode_t mode){
 }
 
 int osada_open(const char *path, struct fuse_file_info *fi){
+	errno_clear;
+
 	file_for_path(path);
 	handle_return("Cannot open directory");
 
@@ -95,6 +97,8 @@ int osada_open(const char *path, struct fuse_file_info *fi){
 }
 
 int osada_rmdir (const char* path){
+	errno_clear;
+
 	if (strcmp(path, ".") == 0 || strcmp(path, "..") == 0){
 		errno = -EBUSY;
 	}
@@ -110,4 +114,29 @@ int osada_rmdir (const char* path){
 	file->state = DELETED;
 
 	return 0;
+}
+
+int osada_rename (const char* oldpath, const char* newpath){
+	errno_clear;
+
+	uint16_t file_block = file_for_path(oldpath);
+	handle_return("Cannot find file");
+
+	file_for_path(newpath);
+	if (errno == 0) errno = -EEXIST;
+	else errno = 0;
+	handle_return("File already exists");
+
+	char* dname = dirname(strdup(newpath));
+	char* bname = basename(strdup(newpath));
+
+	uint16_t parent = file_for_path(dname);
+	handle_return("Cannot find destiny");
+
+	osada_file* file = FILE_TABLE + file_block;
+	set_in_file(file, file->first_block, file->file_size, bname, parent, time(NULL), file->state);
+	handle_return("Couldn't fully update file");
+
+	return 0;
+
 }

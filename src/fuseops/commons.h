@@ -18,6 +18,10 @@ uint16_t file_for_path(const char* path);
 
 int first_free_file(osada_file* table, uint16_t offset);
 
+int set_in_file(osada_file* dir, osada_block_pointer first_block,
+				 uint32_t size, char* bname, uint16_t parent,
+				 uint32_t lastmod, osada_file_state type);
+
 osada_file* create_file(osada_block_pointer first_block,
 				 uint32_t size, char* bname, uint16_t parent,
 				 uint32_t lastmod, osada_file_state type);
