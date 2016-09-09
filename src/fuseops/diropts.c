@@ -5,67 +5,67 @@
  *      Author: maximilianofelice
  */
 #include "../osada.h"
+#include "commons.h"
 
 static const char *hello_str = "Hello World!\n";
 static const char *hello_path = "/hello";
 
-int hello_getattr(const char *path, struct stat *stbuf)
-{
-	int res = 0;
+static int fill_root_stbuf(struct stat *stbuf){
+	stbuf->st_mode = S_IFDIR | 0777;
+	stbuf->st_nlink = 0;
+	stbuf->st_size = 0x0;
+	stbuf->st_mtime = time(NULL);
+	stbuf->st_atime = time(NULL);
+	return 0;
+}
+
+int osada_getattr(const char *path, struct stat *stbuf){
+	errno_clear;
+
+	/* Root has no block defined on FS */
+	if (strcmp(path, "/") == 0){
+		fill_root_stbuf(stbuf);
+		handle_return("Couldn't fill root dir attrs");
+		return 0;
+	}
+
+	uint16_t block = file_for_path(path);
+	//handle_return("Cannot find block for dirname");
+	if ((*__errno_location ()) < 0)
+		return (*__errno_location ());
+
+	osada_file* file = FILE_TABLE + block;
 
 	memset(stbuf, 0, sizeof(struct stat));
-	if (strcmp(path, "/") == 0) {
-		stbuf->st_mode = S_IFDIR | 0755;
-		stbuf->st_nlink = 2;
-	} else if (strcmp(path, hello_path) == 0) {
-		stbuf->st_mode = S_IFREG | 0444;
-		stbuf->st_nlink = 1;
-		stbuf->st_size = strlen(hello_str);
-	} else
-		res = -ENOENT;
 
-	return res;
+	switch(file->state){
+		case DIRECTORY:
+			stbuf->st_mode = S_IFDIR | 0777;
+			break;
+		case REGULAR:
+			stbuf->st_mode = S_IFREG | 0777;
+			break;
+		default:
+			errno = -ENOTDIR;
+	}
+	handle_return("The file was not directory or regular");
+
+	stbuf->st_nlink = 0;
+	stbuf->st_size = file->file_size;
+	stbuf->st_mtime = file->lastmod;
+	stbuf->st_atime = time(NULL);
+
+	return 0;
 }
 
-int is_file(osada_file* file){
-	return (file->state == REGULAR || file->state == DIRECTORY);
-}
-
-int compare(osada_file* file, char* token, uint16_t root){
-	return (is_file(file) && strcmp((char*) file->fname, token) && (file->parent_directory == root));
-}
-
-/** CHECK ENOENT && UINT16: ITS UNSIGNED!!!! **/
-uint16_t block_for_token(osada_file* table, uint16_t offset, char* token, uint16_t root){
-	if (offset > OSADA_FILE_TABLE_ENTRIES) return -ENOENT;
-	else if (compare(table, token, root)) return offset;
-	else return block_for_token(table + 1, offset +1, token, root);
-}
-
-uint16_t block_for_path(char* path, uint16_t root){
-	char* tok = strsep(&path, "/");
-	if (tok == NULL) return block_for_token(FILE_TABLE, 0, path, root);
-	else if(strcmp(tok, "")) return root;
-	else return block_for_path(path, block_for_token(FILE_TABLE, 0, tok, root));
-}
-
-uint16_t get_block(const char* path){
-	char *freeable, *path_copy;
-	freeable = path_copy = strdup(path);
-	uint16_t parent = block_for_path(path_copy, 0);
-	free(freeable);
-	return parent;
-}
-
-int osada_readdir(const char *path, void *buf, fuse_fill_dir_t filler,
-			 off_t offset, struct fuse_file_info *fi)
-{
+int osada_readdir(const char *path, void *buf, fuse_fill_dir_t filler, off_t offset, struct fuse_file_info *fi){
+	errno_clear;
 
 	filler(buf, ".", NULL, 0);
 	filler(buf, "..", NULL, 0);
 
-	uint16_t parent = get_block(path);
-	if (parent < 0) return parent;
+	uint16_t parent = file_for_path(path);
+	handle_return("Cannot find block for dirname");
 
 	for(int i = 0; i < OSADA_FILE_TABLE_ENTRIES; i++){
 		if (is_file(FILE_TABLE + i) && FILE_TABLE[i].parent_directory == parent){
@@ -76,29 +76,17 @@ int osada_readdir(const char *path, void *buf, fuse_fill_dir_t filler,
 	return 0;
 }
 
-int get_free_directory(osada_file* table, uint16_t offset){
-	if (offset > OSADA_FILE_TABLE_ENTRIES) return -ENOENT;
-	else if (!is_file(table)) return offset;
-	else return get_free_directory(table + 1, offset + 1);
-}
-
 int osada_mkdir(const char* path, mode_t mode){
-	// TODO: Dup interface in block_for_path.
-	uint16_t parent = get_block(path);
-	if (parent < 0) return parent;
+	errno_clear;
 
-	uint16_t block = get_free_directory(FILE_TABLE, 0);
-	if (block < 0) return block;
-	osada_file* dir = FILE_TABLE + block;
+	char* bname = basename(strdup(path));
+	char* dname = dirname(strdup(path));
 
-	dir->first_block = ROOT;
-	dir->file_size = 0x0;
-	char *fre, *base = strdup(path);
-	memcpy(&(dir->fname), basename(base), strlen(base));
-	free(fre);
-	dir->parent_directory = parent;
-	dir->lastmod = time(NULL);
-	dir->state = DIRECTORY;
+	uint16_t parent = file_for_path(dname);
+	handle_return("Cannot find block for dirname");
+
+	create_file(ROOT, 0x0, bname, parent, time(NULL), DIRECTORY);
+	handle_return("Cannot create file");
 
 	return 0;
 

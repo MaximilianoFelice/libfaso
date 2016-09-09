@@ -32,7 +32,7 @@ void load_zones(){
 }
 
 struct fuse_operations hello_oper =  {
-	.getattr	= hello_getattr,
+	.getattr	= osada_getattr,
 	.readdir	= osada_readdir,
 	.mkdir		= osada_mkdir,
 	.open		= hello_open,

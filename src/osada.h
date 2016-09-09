@@ -45,7 +45,9 @@ enum {
 	DISK_DATA
 };
 
-#define ROOT 0xFFFF
+#define ROOT 0xFFFFFFFF
+#define NO_FILE 0xFFFF
+#define ROOT_DIR 0xFFFF
 
 #define HEADER ((osada_header*) get(disk, DISK_HEADER))
 #define BITMAP ((char*) get(disk, DISK_BITMAP))
@@ -54,7 +56,7 @@ enum {
 #define DATA ((osada_block*) get(disk, DISK_DATA))
 
 /* FUSE Operations */
-int hello_getattr(const char *path, struct stat *stbuf);
+int osada_getattr(const char *path, struct stat *stbuf);
 int osada_readdir(const char *path, void *buf, fuse_fill_dir_t filler,
 			 off_t offset, struct fuse_file_info *fi);
 int hello_open(const char *path, struct fuse_file_info *fi);

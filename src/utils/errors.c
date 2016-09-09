@@ -6,9 +6,14 @@
  */
 #include "errors.h"
 
-int _handle(char* str) {
+void _clear(){
+	errno = 0;
+}
+
+int _handle(char* str, int silent) {
 	int err = errno;
 	if (err < 0) perror(str);
+	if (silent) _clear();
 	return err;
 }
 
