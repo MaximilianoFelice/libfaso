@@ -7,7 +7,6 @@
 #include "../osada.h"
 #include "commons.h"
 
-static const char *hello_str = "Hello World!\n";
 static const char *hello_path = "/hello";
 
 static int fill_root_stbuf(struct stat *stbuf){
@@ -30,9 +29,7 @@ int osada_getattr(const char *path, struct stat *stbuf){
 	}
 
 	uint16_t block = file_for_path(path);
-	//handle_return("Cannot find block for dirname");
-	if ((*__errno_location ()) < 0)
-		return (*__errno_location ());
+	handle_return("Cannot find block for dirname");
 
 	osada_file* file = FILE_TABLE + block;
 

@@ -6,19 +6,14 @@
  */
 #include "errors.h"
 
-void _clear(){
-	errno = 0;
-}
-
-int _handle(char* str, int silent) {
-	int err = errno;
+int _handle(char* str, int err, int silent) {
 	if (err < 0) perror(str);
-	if (silent) _clear();
+	if (silent) errno_clear;
 	return err;
 }
 
-int _handle_fatal(char* str){
-	int err = handle(str);
+int _handle_fatal(char* str, int no){
+	int err = _handle(str, no, 0);
 	if (err < 0) exit(err);
 	else return err;
 }

@@ -7,11 +7,20 @@
 #include "commons.h"
 
 int is_file(osada_file* file){
+	if (file == NULL){
+		errno = -1;
+		return 0;
+	}
 	return (file->state == REGULAR || file->state == DIRECTORY);
 }
 
 int file_matches(osada_file* file, char* token, uint16_t root){
 	return (is_file(file) && strcmp((char*) file->fname, token) == 0 && (file->parent_directory == root));
+}
+
+static int has_content(char* tok){
+	int content = (tok == NULL || tok[0] == '\0');
+	return !content;
 }
 
 uint16_t first_file_matching(osada_file* table, uint16_t offset, char* token, uint16_t root){
@@ -23,21 +32,19 @@ uint16_t first_file_matching(osada_file* table, uint16_t offset, char* token, ui
 	else return first_file_matching(table + 1, offset +1, token, root);
 }
 
-static int has_content(char* tok){
-	return tok == NULL || tok[0] == '\0';
-}
-
 static uint16_t file_matching(char* path, uint16_t root){
 	char* tok = strsep(&path, "/");
 
-	if (has_content(path) && !has_content(tok)) return file_matching(path, root);
+	int path_has_content = has_content(path);
+	int tok_has_content = has_content(tok);
 
-	else if (!has_content(path) && has_content(tok)) return first_file_matching(FILE_TABLE, 0, tok, root);
+	if (path_has_content && !tok_has_content) return file_matching(path, root);
 
-	else if (has_content(path) && has_content(tok)) file_matching(path, first_file_matching(FILE_TABLE, 0, tok, root));
+	else if (!path_has_content && tok_has_content) return first_file_matching(FILE_TABLE, 0, tok, root);
+
+	else if (path_has_content && tok_has_content) return file_matching(path, first_file_matching(FILE_TABLE, 0, tok, root));
 
 	else return root;
-
 
 }
 
