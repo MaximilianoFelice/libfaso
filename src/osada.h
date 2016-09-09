@@ -15,6 +15,7 @@
 #include <string.h>
 #include <fcntl.h>
 #include <libgen.h>
+#include <signal.h>
 #include "utils/mapping.h"
 #include "utils/errors.h"
 #include "../osada-tools/osada.h"

@@ -39,8 +39,17 @@ struct fuse_operations hello_oper =  {
 	.read		= hello_read,
 };
 
+void unmount(){
+	free_disk(disk);
+	// free_iterator(zones.file_table);
+}
+
 int main(int argc, char *argv[])
 {
+	/* Registering signals */
+	signal(SIGTERM, unmount);
+	signal(SIGABRT, unmount);
+
 	/* Handling Options */
 	struct fuse_args args = FUSE_ARGS_INIT(argc, argv);
 	set_fuse_options(&args);
@@ -51,9 +60,4 @@ int main(int argc, char *argv[])
 	load_zones();
 
 	return fuse_main(args.argc, args.argv, &hello_oper, NULL);
-}
-
-void unmount(){
-	free_disk(disk);
-	// free_iterator(zones.file_table);
 }
