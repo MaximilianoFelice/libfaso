@@ -65,14 +65,14 @@ int first_free_file(osada_file* table, uint16_t offset){
 }
 
 int set_in_file(osada_file* dir, osada_block_pointer first_block,
-				 uint32_t size, char* bname, uint16_t parent,
+				 uint32_t size, unsigned char* bname, uint16_t parent,
 				 uint32_t lastmod, osada_file_state type){
 
-	if (strlen(bname) > sizeof_member(osada_file, fname)) return errno = -ENAMETOOLONG;
+	if (strlen((char*) bname) > sizeof_member(osada_file, fname)) return errno = -ENAMETOOLONG;
 
 	dir->first_block = first_block;
 	 dir->file_size = size;
-	memcpy(&(dir->fname), bname, strlen(bname));
+	memcpy(&(dir->fname), (char*) bname, strlen((char*) bname));
 	dir->parent_directory = parent;
 	dir->lastmod = lastmod;
 	dir->state = type;
@@ -81,15 +81,15 @@ int set_in_file(osada_file* dir, osada_block_pointer first_block,
 }
 
 osada_file* create_file(osada_block_pointer first_block,
-				 uint32_t size, char* bname, uint16_t parent,
+				 uint32_t size, unsigned char* bname, uint16_t parent,
 				 uint32_t lastmod, osada_file_state type){
-	first_file_matching(FILE_TABLE, 0, bname, parent);
+	first_file_matching(FILE_TABLE, 0, (char*) bname, parent);
 	switch(errno){
 		case -ENOENT:
 			errno_clear;
 			break;
 	}
-	handle_return("Error: Probably found another file with that name");
+	handle_return_null("Error: Probably found another file with that name");
 
 	uint16_t block = first_free_file(FILE_TABLE, 0);
 	handle_silent("Couldn't get free block");
@@ -110,7 +110,7 @@ int osada_create_file(const char* path, osada_file_state type){
 	uint16_t parent = file_for_path(dname);
 	handle_return("Cannot find block for dirname");
 
-	create_file(ROOT, 0x0, bname, parent, time(NULL), type);
+	create_file(ROOT, 0x0, (unsigned char*) bname, parent, time(NULL), type);
 	handle_return("Cannot create file");
 
 	return 0;

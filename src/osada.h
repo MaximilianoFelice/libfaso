@@ -61,13 +61,14 @@ enum {
 int osada_getattr(const char *path, struct stat *stbuf);
 int osada_readdir(const char *path, void *buf, fuse_fill_dir_t filler,
 			 off_t offset, struct fuse_file_info *fi);
-int osada_open(const char *path, struct fuse_file_info *fi);
 int hello_read(const char *path, char *buf, size_t size, off_t offset,
 		struct fuse_file_info *fi);
 int osada_mkdir(const char* path, mode_t mode);
 int osada_rmdir (const char* path);
 int osada_rename (const char* oldpath, const char* newpath);
-int osada_mknod (const char *, mode_t, dev_t);
+int osada_mknod (const char *path, mode_t st_mode, dev_t type);
+int osada_open (const char *path, struct fuse_file_info *fi);
+int osada_truncate (const char *path, off_t new_size);
 
 
 #endif /* SRC_OSADA_H_ */

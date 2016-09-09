@@ -122,7 +122,7 @@ int osada_rename (const char* oldpath, const char* newpath){
 	handle_return("Cannot find destiny");
 
 	osada_file* file = FILE_TABLE + file_block;
-	set_in_file(file, file->first_block, file->file_size, bname, parent, time(NULL), file->state);
+	set_in_file(file, file->first_block, file->file_size, (unsigned char*) bname, parent, time(NULL), file->state);
 	handle_return("Couldn't fully update file");
 
 	return 0;

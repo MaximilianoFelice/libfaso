@@ -31,6 +31,9 @@ void _clear();
 #define handle_return(msg) \
 	errno_ret2(errno, handle(msg))
 
+#define handle_return_null(msg) \
+	errno_ret2(handle(msg), NULL)
+
 #define handle_silent(msg) _handle(msg, errno, 1)
 #define handle_return_silent(msg) \
 	errno_ret(handle_silent(msg));

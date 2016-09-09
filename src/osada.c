@@ -40,7 +40,8 @@ struct fuse_operations hello_oper =  {
 	.rmdir 		= osada_rmdir,
 	.rename 	= osada_rename,
 	.mknod 		= osada_mknod,
-
+	.open		= osada_open,
+	.truncate	= osada_truncate,
 	/*
 		.read = grasa_read,			// OK
 		.truncate = grasa_truncate, // OK
