@@ -101,6 +101,21 @@ osada_file* create_file(osada_block_pointer first_block,
 	return dir;
 }
 
+int osada_create_file(const char* path, osada_file_state type){
+	errno_clear;
+
+	char* dname = dirname(strdup(path));
+	char* bname = basename(strdup(path));
+
+	uint16_t parent = file_for_path(dname);
+	handle_return("Cannot find block for dirname");
+
+	create_file(ROOT, 0x0, bname, parent, time(NULL), type);
+	handle_return("Cannot create file");
+
+	return 0;
+}
+
 int directory_is_empty(uint16_t parent){
 
 	for(int acc = 0; acc < OSADA_FILE_TABLE_ENTRIES; acc++){

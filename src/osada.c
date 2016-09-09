@@ -39,6 +39,7 @@ struct fuse_operations hello_oper =  {
 	.read		= hello_read,
 	.rmdir 		= osada_rmdir,
 	.rename 	= osada_rename,
+	.mknod 		= osada_mknod,
 
 	/*
 		.read = grasa_read,			// OK

@@ -27,3 +27,9 @@ int hello_read(const char *path, char *buf, size_t size, off_t offset,
 
 	return size;
 }
+
+int osada_mknod (const char *path, mode_t st_mode, dev_t type){
+	if (S_ISDIR(st_mode)) return osada_create_file(path, DIRECTORY);
+	else if (S_ISREG(st_mode)) return osada_create_file(path, REGULAR);
+	else return errno = -EINVAL;
+}

@@ -72,19 +72,7 @@ int osada_readdir(const char *path, void *buf, fuse_fill_dir_t filler, off_t off
 }
 
 int osada_mkdir(const char* path, mode_t mode){
-	errno_clear;
-
-	char* dname = dirname(strdup(path));
-	char* bname = basename(strdup(path));
-
-	uint16_t parent = file_for_path(dname);
-	handle_return("Cannot find block for dirname");
-
-	create_file(ROOT, 0x0, bname, parent, time(NULL), DIRECTORY);
-	handle_return("Cannot create file");
-
-	return 0;
-
+	return osada_create_file(path, DIRECTORY);
 }
 
 int osada_open(const char *path, struct fuse_file_info *fi){
