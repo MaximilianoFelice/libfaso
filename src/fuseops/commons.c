@@ -91,3 +91,13 @@ osada_file* create_file(osada_block_pointer first_block,
 
 	return dir;
 }
+
+int directory_is_empty(uint16_t parent){
+
+	for(int acc = 0; acc < OSADA_FILE_TABLE_ENTRIES; acc++){
+		osada_file* pos = FILE_TABLE + acc;
+		if (is_file(pos) && pos->parent_directory == parent) return 0;
+	}
+
+	return 1;
+}

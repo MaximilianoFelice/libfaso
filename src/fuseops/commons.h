@@ -22,4 +22,6 @@ osada_file* create_file(osada_block_pointer first_block,
 				 uint32_t size, char* bname, uint16_t parent,
 				 uint32_t lastmod, osada_file_state type);
 
+int directory_is_empty(uint16_t parent);
+
 #endif /* SRC_FUSEOPS_COMMONS_H_ */

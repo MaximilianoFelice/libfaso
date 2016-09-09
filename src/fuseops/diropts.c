@@ -7,8 +7,6 @@
 #include "../osada.h"
 #include "commons.h"
 
-static const char *hello_path = "/hello";
-
 static int fill_root_stbuf(struct stat *stbuf){
 	stbuf->st_mode = S_IFDIR | 0777;
 	stbuf->st_nlink = 0;
@@ -89,10 +87,27 @@ int osada_mkdir(const char* path, mode_t mode){
 
 }
 
-int osada_open(const char *path, struct fuse_file_info *fi)
-{
+int osada_open(const char *path, struct fuse_file_info *fi){
 	file_for_path(path);
 	handle_return("Cannot open directory");
+
+	return 0;
+}
+
+int osada_rmdir (const char* path){
+	if (strcmp(path, ".") == 0 || strcmp(path, "..") == 0){
+		errno = -EBUSY;
+	}
+	handle_return("Couldn't remove dir");
+
+	uint16_t block = file_for_path(path);
+	handle_return("Cannot find path");
+
+	if (!directory_is_empty(block)) errno = -ENOTEMPTY;
+	handle_return("Directory is not empty");
+
+	osada_file *file = FILE_TABLE + block;
+	file->state = DELETED;
 
 	return 0;
 }

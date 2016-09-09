@@ -37,16 +37,15 @@ struct fuse_operations hello_oper =  {
 	.mkdir		= osada_mkdir,
 	.open		= osada_open,
 	.read		= hello_read,
+	.rmdir 		= osada_rmdir,
+	//.rename 	= osada_rename,
 
 	/*
-		.open = grasa_open,			// OK
 		.read = grasa_read,			// OK
-		.rmdir = grasa_rmdir,		// OK
 		.truncate = grasa_truncate, // OK
 		.write = grasa_write,		// OK
 		.mknod = grasa_mknod,		// OK
 		.unlink = grasa_unlink,		// OK
-		.rename = grasa_rename,		// OK
 		.setxattr = grasa_setxattr,	// OK
 		.access = grasa_access,		// OK
 		.chmod = grasa_chmod,		// OK
