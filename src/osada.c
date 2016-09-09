@@ -35,8 +35,25 @@ struct fuse_operations hello_oper =  {
 	.getattr	= osada_getattr,
 	.readdir	= osada_readdir,
 	.mkdir		= osada_mkdir,
-	.open		= hello_open,
+	.open		= osada_open,
 	.read		= hello_read,
+
+	/*
+		.open = grasa_open,			// OK
+		.read = grasa_read,			// OK
+		.rmdir = grasa_rmdir,		// OK
+		.truncate = grasa_truncate, // OK
+		.write = grasa_write,		// OK
+		.mknod = grasa_mknod,		// OK
+		.unlink = grasa_unlink,		// OK
+		.rename = grasa_rename,		// OK
+		.setxattr = grasa_setxattr,	// OK
+		.access = grasa_access,		// OK
+		.chmod = grasa_chmod,		// OK
+		.utime = grasa_utime,		// OK
+		.chown = grasa_chown,		// OK
+		.flush = grasa_flush,		// OK
+	 */
 };
 
 void unmount(){
@@ -44,8 +61,25 @@ void unmount(){
 	// free_iterator(zones.file_table);
 }
 
+void fusermount(struct fuse_args* args){
+	const char* com = "fusermount -u ";
+	const char* mountpoint =  args->argv[args->argc-1];
+	int com_size = strlen(com);
+	int mount_size = strlen(mountpoint);
+	char* command = malloc(com_size + mount_size + 1);
+	memset(command, 0, com_size + mount_size + 1);
+	memcpy(command, com, com_size);
+	memcpy(command + com_size, mountpoint, mount_size);
+	errno = system(command);
+	handle_fatal("There's a mount at path that couldn't be unmount. Check that you set [MOUNTPOINT] as last parameter.");
+	free(command);
+}
+
 int main(int argc, char *argv[])
 {
+	/* Clearing errors */
+	errno_clear;
+
 	/* Registering signals */
 	signal(SIGTERM, unmount);
 	signal(SIGABRT, unmount);
@@ -54,6 +88,9 @@ int main(int argc, char *argv[])
 	struct fuse_args args = FUSE_ARGS_INIT(argc, argv);
 	set_fuse_options(&args);
 	handle_fatal("Error at parsing parameters");
+
+	/* Unmounting previous FS */
+	fusermount(&args);
 
 	/* Opening Disk */
 	open_osada();

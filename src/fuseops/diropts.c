@@ -89,13 +89,10 @@ int osada_mkdir(const char* path, mode_t mode){
 
 }
 
-int hello_open(const char *path, struct fuse_file_info *fi)
+int osada_open(const char *path, struct fuse_file_info *fi)
 {
-	if (strcmp(path, hello_path) != 0)
-		return -ENOENT;
-
-	if ((fi->flags & 3) != O_RDONLY)
-		return -EACCES;
+	file_for_path(path);
+	handle_return("Cannot open directory");
 
 	return 0;
 }
