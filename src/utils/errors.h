@@ -17,7 +17,7 @@ int _handle(char*, int no, int silent);
 void _clear();
 
 #define errno_ret2(val, sth) \
-	if (val < 0) return sth
+	if (val != 0) return sth
 
 #define errno_ret1(sth) errno_ret2(errno, sth)
 

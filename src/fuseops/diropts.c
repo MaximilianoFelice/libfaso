@@ -43,9 +43,9 @@ int osada_getattr(const char *path, struct stat *stbuf){
 			stbuf->st_mode = S_IFREG | 0777;
 			break;
 		default:
-			errno = -ENOTDIR;
+			errno = -ENOENT;
 	}
-	handle_return("The file was not directory or regular");
+	handle_return("The file was no file");
 
 	stbuf->st_nlink = 0;
 	stbuf->st_size = file->file_size;
