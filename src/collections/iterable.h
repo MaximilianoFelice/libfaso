@@ -25,17 +25,22 @@ typedef struct __iter_type{
 } __iter_type;
 
 typedef struct iterable {
+	const void* first;
 	void* head;
 	size_t struct_size;
 	int offset;
 	__iter_type* type;
 } iterable;
 
+int has_next(iterable* iterator);
+void* next(iterable* iterator);
+iterable* __create_iterator(void* head, size_t struct_size, __iter_type *type);
+void __free_iterator(iterable* iterator);
+
 #define create_iterator(head, type) \
 	__create_iterator((void*) head, sizeof(*head), type)
 
-int has_next(iterable* iterator);
-void* next(iterable* iterator);
+#define free_iterator(iterator) __free_iterator(iterator)
 
 #define __iter_has_next(_type) \
 	int __##_type##_has_next(void* iterator){ \

@@ -10,6 +10,7 @@
 iterable* __create_iterator(void* head, size_t struct_size, __iter_type *type){
 	iterable* iterator = malloc(sizeof(iterable));
 
+	iterator->first = head;
 	iterator->head = head;
 	iterator->offset = 0;
 	iterator->struct_size = struct_size;
@@ -18,7 +19,7 @@ iterable* __create_iterator(void* head, size_t struct_size, __iter_type *type){
 	return iterator;
 }
 
-void free_iterator(iterable* iterator){
+void __free_iterator(iterable* iterator){
 	iterator->type->free_type(iterator->type);
 	free(iterator);
 }
