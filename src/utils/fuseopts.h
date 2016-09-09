@@ -11,6 +11,7 @@
 #include <fuse.h>
 #include <stddef.h>
 #include <stdlib.h>
+#include <string.h>
 #include <commons/log.h>
 
 #define CUSTOM_FUSE_OPT_KEY(t, p, v) { t, offsetof(struct t_runtime_options, p), v }
@@ -28,11 +29,13 @@ enum {
 	KEY_HELP,
 };
 
+extern t_log_level log_level;
+
 /*
  * Esta estructura es utilizada para decirle a la biblioteca de FUSE que
  * parametro puede recibir y donde tiene que guardar el valor de estos
  */
-static struct fuse_opt fuse_options[] = {
+const static struct fuse_opt fuse_options[] = {
 
 		// Si se le manda el parametro "--Disc-Path", lo utiliza:
 		CUSTOM_FUSE_OPT_KEY("--Disc-Path=%s", define_disc_path, 0),

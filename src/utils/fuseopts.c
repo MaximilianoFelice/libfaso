@@ -7,6 +7,7 @@
 
 #include "fuseopts.h"
 
+t_log_level log_level;
 int set_fuse_options(struct fuse_args *args){
 	// Limpio la estructura que va a contener los parametros
 	memset(&runtime_options, 0, sizeof(struct t_runtime_options));
@@ -27,7 +28,7 @@ int set_fuse_options(struct fuse_args *args){
 	}
 
 	// Settea el log level del disco:
-	t_log_level log_level = LOG_LEVEL_ERROR;
+	log_level = LOG_LEVEL_ERROR;
 	if (runtime_options.log_level_param != NULL){
 		if (!strcmp(runtime_options.log_level_param, "Trace")) log_level = LOG_LEVEL_TRACE;
 		else if (!strcmp(runtime_options.log_level_param, "Debug")) log_level = LOG_LEVEL_DEBUG;

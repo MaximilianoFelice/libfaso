@@ -19,6 +19,7 @@
 #include "utils/errors.h"
 #include "../osada-tools/osada.h"
 #include "utils/fuseopts.h"
+#include "collections/iterable.h"
 
 /*
  * Este es el path de nuestro, relativo al punto de montaje, archivo dentro del FS
@@ -28,7 +29,13 @@
 #define OSADA_FILE_TABLE_BLOCKS 1024
 #define OSADA_FILE_TABLE_ENTRIES (OSADA_FILE_TABLE_BLOCKS*2)
 
+
+typedef struct OsadaZones {
+	iterable* file_table;
+} OsadaZones;
+
 extern Disk* disk;
+extern OsadaZones zones;
 
 enum {
 	DISK_HEADER,

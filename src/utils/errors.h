@@ -10,8 +10,12 @@
 
 #include <stdio.h>
 #include <errno.h>
+#include <stdlib.h>
 
-int handle_fatal(char*);
-int handle(char*);
+int _handle_fatal(char*);
+int _handle(char*);
+
+#define handle_fatal(msg) _handle_fatal(msg)
+#define handle(msg) _handle(msg)
 
 #endif /* SRC_UTILS_ERRORS_H_ */

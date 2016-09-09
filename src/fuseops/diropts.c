@@ -52,7 +52,7 @@ uint16_t block_for_path(char* path, uint16_t root){
 uint16_t get_block(const char* path){
 	char *freeable, *path_copy;
 	freeable = path_copy = strdup(path);
-	uint16_t parent = block_for_path(path, 0);
+	uint16_t parent = block_for_path(path_copy, 0);
 	free(freeable);
 	return parent;
 }
@@ -69,7 +69,7 @@ int osada_readdir(const char *path, void *buf, fuse_fill_dir_t filler,
 
 	for(int i = 0; i < OSADA_FILE_TABLE_ENTRIES; i++){
 		if (is_file(FILE_TABLE + i) && FILE_TABLE[i].parent_directory == parent){
-			filler(buf, FILE_TABLE[i].fname, NULL, 0);
+			filler(buf, (char*) FILE_TABLE[i].fname, NULL, 0);
 		}
 	}
 

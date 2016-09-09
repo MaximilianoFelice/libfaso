@@ -18,13 +18,17 @@ void open_osada(){
 	int disk_descriptor = open64(runtime_options.define_disc_path, O_RDWR, 0);
 	handle_fatal("Error at opening file");
 
-
 	disk = open_disk(disk_descriptor, OSADA_BLOCK_SIZE);
 	add_disk_zone(disk, sizeof(osada_header), IMPORTANT);
 	add_disk_zone(disk, header(disk)->bitmap_blocks, IMPORTANT);
 	add_disk_zone(disk, OSADA_FILE_TABLE_BLOCKS, IMPORTANT);
 	add_disk_zone(disk, alloc_table_size(disk), IMPORTANT);
 	add_disk_zone(disk, header(disk)->data_blocks, NORMAL);
+}
+
+void load_zones(){
+	// char* table = (char*) get(disk, FILE_TABLE);
+	// zones.file_table = create_iterator(table, ARRAY(OSADA_FILE_TABLE_ENTRIES));
 }
 
 struct fuse_operations hello_oper =  {
@@ -44,10 +48,12 @@ int main(int argc, char *argv[])
 
 	/* Opening Disk */
 	open_osada();
+	load_zones();
 
 	return fuse_main(args.argc, args.argv, &hello_oper, NULL);
 }
 
 void unmount(){
 	free_disk(disk);
+	// free_iterator(zones.file_table);
 }
