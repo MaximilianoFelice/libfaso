@@ -35,10 +35,10 @@ int osada_getattr(const char *path, struct stat *stbuf){
 
 	switch(file->state){
 		case DIRECTORY:
-			stbuf->st_mode = S_IFDIR | 0777;
+			stbuf->st_mode = S_IFDIR | 0755;
 			break;
 		case REGULAR:
-			stbuf->st_mode = S_IFREG | 0777;
+			stbuf->st_mode = S_IFREG | 0644;
 			break;
 		default:
 			errno = -ENOENT;
