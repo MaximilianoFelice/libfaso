@@ -43,16 +43,7 @@ struct fuse_operations hello_oper =  {
 	.open		= osada_open,
 	.truncate	= osada_truncate,
 	.utimens	= osada_utimens,
-	/*
-		.read = grasa_read,			// OK
-		.write = grasa_write,		// OK
-		.unlink = grasa_unlink,		// OK
-		.setxattr = grasa_setxattr,	// OK
-		.access = grasa_access,		// OK
-		.chmod = grasa_chmod,		// OK
-		.chown = grasa_chown,		// OK
-		.flush = grasa_flush,		// OK
-	 */
+	.unlink		= osada_unlink,
 };
 
 void unmount(){

@@ -116,6 +116,26 @@ int osada_create_file(const char* path, osada_file_state type){
 	return 0;
 }
 
+int osada_delete_file(const char* path){
+	errno_clear;
+
+	if (strcmp(path, ".") == 0 || strcmp(path, "..") == 0){
+		errno = -EBUSY;
+	}
+	handle_return("Couldn't remove file or directory");
+
+	uint16_t block = file_for_path(path);
+	handle_return("Cannot find path");
+
+	if (!directory_is_empty(block)) errno = -ENOTEMPTY;
+	handle_return("Directory is not empty");
+
+	osada_file *file = FILE_TABLE + block;
+	file->state = DELETED;
+
+	return 0;
+}
+
 int directory_is_empty(uint16_t parent){
 
 	for(int acc = 0; acc < OSADA_FILE_TABLE_ENTRIES; acc++){

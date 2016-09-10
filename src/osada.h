@@ -70,6 +70,7 @@ int osada_mknod(const char *path, mode_t st_mode, dev_t type);
 int osada_open(const char *path, struct fuse_file_info *fi);
 int osada_truncate(const char *path, off_t new_size);
 int osada_utimens(const char *path, const struct timespec tv[2]);
+int osada_unlink(const char *path);
 
 
 #endif /* SRC_OSADA_H_ */

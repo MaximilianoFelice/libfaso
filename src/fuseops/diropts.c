@@ -84,26 +84,6 @@ int osada_open(const char *path, struct fuse_file_info *fi){
 	return 0;
 }
 
-int osada_rmdir (const char* path){
-	errno_clear;
-
-	if (strcmp(path, ".") == 0 || strcmp(path, "..") == 0){
-		errno = -EBUSY;
-	}
-	handle_return("Couldn't remove dir");
-
-	uint16_t block = file_for_path(path);
-	handle_return("Cannot find path");
-
-	if (!directory_is_empty(block)) errno = -ENOTEMPTY;
-	handle_return("Directory is not empty");
-
-	osada_file *file = FILE_TABLE + block;
-	file->state = DELETED;
-
-	return 0;
-}
-
 int osada_rename (const char* oldpath, const char* newpath){
 	errno_clear;
 
@@ -140,4 +120,12 @@ int osada_utimens(const char *path, const struct timespec tv[2]){
 	handle_return("Cannot update file");
 
 	return 0;
+}
+
+int osada_rmdir(const char* path){
+	return osada_delete_file(path);
+}
+
+int osada_unlink(const char *path){
+	return osada_delete_file(path);
 }

@@ -29,5 +29,6 @@ osada_file* create_file(osada_block_pointer first_block,
 int directory_is_empty(uint16_t parent);
 
 int osada_create_file(const char* path, osada_file_state type);
+int osada_delete_file(const char* path);
 
 #endif /* SRC_FUSEOPS_COMMONS_H_ */
