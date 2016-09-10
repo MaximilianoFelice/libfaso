@@ -1,29 +1,29 @@
 #include "osada.h"
 
-osada_header* header(Disk* disk){
-	return (osada_header*) disk;
-}
 
 int alloc_table_size(Disk* disk){
-	osada_header* osada_header = header(disk);
-	int alloc = osada_header->allocations_table_offset;
-	int data = osada_header->data_blocks;
-	int blocks = osada_header->fs_blocks;
+	int alloc = HEADER->allocations_table_offset;
+	int data = HEADER->data_blocks;
+	int blocks = HEADER->fs_blocks;
 
 	return blocks - (alloc + data);
 }
 
 Disk* disk = NULL;
+t_bitarray *bitmap = NULL;
 void open_osada(){
 	int disk_descriptor = open64(runtime_options.define_disc_path, O_RDWR, 0);
 	handle_fatal("Error at opening file");
 
 	disk = open_disk(disk_descriptor, OSADA_BLOCK_SIZE);
-	add_disk_zone(disk, sizeof(osada_header), IMPORTANT);
-	add_disk_zone(disk, header(disk)->bitmap_blocks, IMPORTANT);
+	add_disk_zone(disk, OSADA_HEADER_BLOCKS, IMPORTANT);
+	add_disk_zone(disk, HEADER->bitmap_blocks, IMPORTANT);
 	add_disk_zone(disk, OSADA_FILE_TABLE_BLOCKS, IMPORTANT);
 	add_disk_zone(disk, alloc_table_size(disk), IMPORTANT);
-	add_disk_zone(disk, header(disk)->data_blocks, NORMAL);
+	add_disk_zone(disk, HEADER->data_blocks, NORMAL);
+
+	int padding = get_zone(disk, DISK_DATA)->offset;
+	bitmap = bitarray_create((char*) BITMAP + padding, disk->block_count - padding);
 }
 
 void load_zones(){
@@ -44,9 +44,12 @@ struct fuse_operations hello_oper =  {
 	.truncate	= osada_truncate,
 	.utimens	= osada_utimens,
 	.unlink		= osada_unlink,
+	.read		= osada_read,
+	.write		= osada_write,
 };
 
 void unmount(){
+	bitarray_destroy(bitmap);
 	free_disk(disk);
 	// free_iterator(zones.file_table);
 }

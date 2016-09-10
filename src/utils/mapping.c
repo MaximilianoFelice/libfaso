@@ -26,7 +26,7 @@ static DiskZone* last_zone(DiskZone* zone){
 }
 
 static uint64_t zone_offset_acc(DiskZone* zone, uint64_t acc){
-	if (zone == NULL || zone->next == NULL) return acc;
+	if (zone == NULL) return acc;
 	else return zone_offset_acc(zone->next, acc + zone->size);
 }
 
@@ -73,13 +73,13 @@ void free_disk(Disk* disk){
 
 /* Resources Operations */
 
-char* get_zone(DiskZone* zone, int depth){
-	if (depth == 0) return (char*) zone->start;
-	else return get_zone(zone->next, depth-1);
+DiskZone* _get_zone(DiskZone* zone, int depth){
+	if (depth == 0) return zone;
+	else return _get_zone(zone->next, depth-1);
 }
 
-char* get(Disk* disk, int zone){
-	return get_zone(disk->zones, zone);
+DiskZone* get_zone(Disk* disk, int zone){
+	return _get_zone(disk->zones, zone);
 }
 
 uint64_t size(int fd){
@@ -95,7 +95,7 @@ void operate_disk(Disk* disk){
 void operate_flags(Disk* disk, DiskZone* zone){
 	zone_attr att = zone->attr;
 
-	if (att & (1 << IMPORTANT))
+	if (TEST_FLAG(att, IMPORTANT))
 		mlock(zone->start, zone->size * disk->block_size);
 }
 

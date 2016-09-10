@@ -68,11 +68,13 @@ int set_in_file(osada_file* dir, osada_block_pointer first_block,
 				 uint32_t size, unsigned char* bname, uint16_t parent,
 				 uint32_t lastmod, osada_file_state type){
 
-	if (strlen((char*) bname) > sizeof_member(osada_file, fname)) return errno = -ENAMETOOLONG;
+	if ((strlen((char*) bname) + 1) > sizeof_member(osada_file, fname)) return errno = -ENAMETOOLONG;
 
 	dir->first_block = first_block;
-	 dir->file_size = size;
-	memcpy(&(dir->fname), (char*) bname, strlen((char*) bname));
+	dir->file_size = size;
+	int name_length = strlen((char*) bname);
+	memcpy(&(dir->fname), (char*) bname, name_length);
+	dir->fname[name_length] = '\0';
 	dir->parent_directory = parent;
 	dir->lastmod = lastmod;
 	dir->state = type;
@@ -110,7 +112,7 @@ int osada_create_file(const char* path, osada_file_state type){
 	uint16_t parent = file_for_path(dname);
 	handle_return("Cannot find block for dirname");
 
-	create_file(ROOT, 0x0, (unsigned char*) bname, parent, time(NULL), type);
+	create_file(LAST_BLOCK, 0, (unsigned char*) bname, parent, time(NULL), type);
 	handle_return("Cannot create file");
 
 	return 0;

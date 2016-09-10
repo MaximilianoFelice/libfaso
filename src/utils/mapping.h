@@ -15,6 +15,8 @@
 #include <stdint.h>
 #include <stdlib.h>
 
+//#define TEST_FLAG(var, flag) (var & (1 << flag))
+#define TEST_FLAG(var, flag) ((var & flag) != 0)
 typedef uint32_t zone_attr;
 
 typedef struct DiskZone {
@@ -37,7 +39,7 @@ uint64_t size(int fd);
 Disk* open_disk(int fd, uint64_t block_size);
 DiskZone* add_disk_zone(Disk* disk, uint64_t blocks, zone_attr attrs);
 void free_disk(Disk* disk);
-char* get(Disk* disk, int zone);
+DiskZone* get_zone(Disk* disk, int zone);
 
 #define	NORMAL 0x1
 #define IMPORTANT 0x2

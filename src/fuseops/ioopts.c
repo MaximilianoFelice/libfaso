@@ -48,3 +48,99 @@ int osada_truncate(const char *path, off_t new_size){
 
 	return 0;
 }
+
+typedef uint16_t traverse_mode;
+#define TR_READ 0x1
+#define TR_WRITE 0x2
+
+osada_block_pointer alloc_block(){
+	int block = 0;
+	while(bitarray_test_bit(bitmap, block)){
+		if (block > get_zone(disk, DISK_DATA)->size){
+			errno = -1;
+			return LAST_BLOCK;
+		}
+		block++;
+	}
+	return block;
+}
+
+int handle_block_creation(osada_block_pointer *from, traverse_mode mode){
+	if (*from != LAST_BLOCK) return 0;
+	if(TEST_FLAG(mode, TR_WRITE)) {
+		osada_block_pointer p = alloc_block();
+		handle_return("Disk is full");
+		*from = p;
+		return p;
+	}
+	else return errno = -1;
+}
+
+osada_block* link_block(osada_file* file, off_t offset, traverse_mode mode){
+	handle_block_creation((osada_block_pointer*) &(file->first_block), mode);
+	handle_return_null("Couldn't create block");
+	osada_block_pointer from = file->first_block;
+
+	int steps = offset / OSADA_BLOCK_SIZE;
+
+	do {
+		handle_block_creation(ALLOC_TABLE + from, mode);
+		handle_return_null("Couldn't create block");
+
+		if (steps > 0) from = ALLOC_TABLE[from];
+		steps--;
+	} while (steps > 0);
+
+	return DATA + from;
+}
+
+off_t block_fill(char* to, char* from, off_t offset){
+	off_t to_write = OSADA_BLOCK_SIZE - offset;
+	memcpy(to, from, to_write);
+	return to_write;
+}
+
+int check_file_size(osada_file *file, size_t size, traverse_mode mode){
+	if (file->file_size > size) return 0;
+	if (TEST_FLAG(mode, TR_WRITE)) return file->file_size = size;
+	else return errno = -1;
+}
+
+int osada_traverse(const char *path, char* buffer, size_t size, off_t offset,
+				   traverse_mode mode){
+	errno_clear;
+
+	uint16_t block = file_for_path(path);
+	handle_return("Cannot find file");
+	osada_file* file = FILE_TABLE + block;
+
+	check_file_size(file, offset + size, mode);
+	handle_return("File offset exceeded");
+
+	off_t advance = 0;
+	off_t position, left_to_operate = size;
+
+	while(left_to_operate > 0){
+		advance = size - left_to_operate;
+		position = offset + advance;
+
+		osada_block *block = link_block(file, position, mode);
+		handle_return("Cannot read more than file length");
+
+		if (TEST_FLAG(mode, TR_WRITE))
+			left_to_operate -= block_fill((char*) block, buffer + advance, position % OSADA_BLOCK_SIZE);
+		else
+			left_to_operate -= block_fill(buffer + advance, (char*) block, position % OSADA_BLOCK_SIZE);
+
+		handle_return("Cannot fill block");
+	}
+
+	return advance;
+}
+int osada_read(const char *path, char *buffer, size_t size, off_t offset, struct fuse_file_info *fi){
+	return osada_traverse(path, buffer, size, offset, TR_READ);
+}
+
+int osada_write(const char *path, const char *buffer, size_t size, off_t offset, struct fuse_file_info *fi){
+	return osada_traverse(path, (char*) buffer, size, offset, TR_WRITE);
+}
