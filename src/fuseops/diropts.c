@@ -128,3 +128,16 @@ int osada_rename (const char* oldpath, const char* newpath){
 	return 0;
 
 }
+
+int osada_utimens(const char *path, const struct timespec tv[2]){
+	errno_clear;
+
+	uint16_t block = file_for_path(path);
+	handle_return("Cannot find file");
+
+	osada_file* file = FILE_TABLE + block;
+	set_in_file(file, file->first_block, file->file_size, file->fname, file->parent_directory, tv[1].tv_sec, file->state);
+	handle_return("Cannot update file");
+
+	return 0;
+}

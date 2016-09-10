@@ -42,16 +42,14 @@ struct fuse_operations hello_oper =  {
 	.mknod 		= osada_mknod,
 	.open		= osada_open,
 	.truncate	= osada_truncate,
+	.utimens	= osada_utimens,
 	/*
 		.read = grasa_read,			// OK
-		.truncate = grasa_truncate, // OK
 		.write = grasa_write,		// OK
-		.mknod = grasa_mknod,		// OK
 		.unlink = grasa_unlink,		// OK
 		.setxattr = grasa_setxattr,	// OK
 		.access = grasa_access,		// OK
 		.chmod = grasa_chmod,		// OK
-		.utime = grasa_utime,		// OK
 		.chown = grasa_chown,		// OK
 		.flush = grasa_flush,		// OK
 	 */
