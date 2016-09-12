@@ -104,26 +104,32 @@ off_t block_fill(char* to, char* from, size_t size, off_t offset){
 }
 
 int check_file_size(osada_file *file, size_t size, traverse_mode mode){
-	if (file->file_size > size) return 0;
+	if (file->file_size > size) return size;
 	if (TEST_FLAG(mode, TR_WRITE)) return file->file_size = size;
-	else return errno = -1;
+	else {
+		errno = -1;
+		return file->file_size;
+	}
 }
 
 int osada_traverse(const char *path, char* buffer, size_t size, off_t offset,
-				   traverse_mode mode){
+				   struct fuse_file_info *fi, traverse_mode mode){
 	errno_clear;
 
 	uint16_t block = file_for_path(path);
 	handle_return("Cannot find file");
 	osada_file* file = FILE_TABLE + block;
 
-	check_file_size(file, offset + size, mode);
-	handle_return("File offset exceeded");
+	size = check_file_size(file, offset + size, mode) - offset;
+	if (fi->direct_io)
+	{handle_return("File offset exceeded");
+	} else errno=0;
+
 
 
 	off_t left_to_operate = size;
 	off_t operated = 0;
-	off_t position = 0;
+	off_t position = offset;
 
 	int _is_required_node(){
 		if (	position > (offset - disk->block_size) ||
@@ -149,11 +155,12 @@ int osada_traverse(const char *path, char* buffer, size_t size, off_t offset,
 		position = count * disk->block_size;
 
 		if (_is_required_node() && _continue_linking(p)){
-			operated = size - left_to_operate;
 			if (TEST_FLAG(mode, TR_WRITE))
 				left_to_operate -= block_fill((char*) DATA + *p, buffer + operated, _size_to_operate(), position % OSADA_BLOCK_SIZE);
 			else
 				left_to_operate -= block_fill(buffer + operated, (char*) DATA + *p, _size_to_operate(), position % OSADA_BLOCK_SIZE);
+
+			operated = size - left_to_operate;
 			return 1;
 		} else return _continue_linking(p);
 	}
@@ -165,9 +172,9 @@ int osada_traverse(const char *path, char* buffer, size_t size, off_t offset,
 	return operated;
 }
 int osada_read(const char *path, char *buffer, size_t size, off_t offset, struct fuse_file_info *fi){
-	return osada_traverse(path, buffer, size, offset, TR_READ);
+	return osada_traverse(path, buffer, size, offset, fi, TR_READ);
 }
 
 int osada_write(const char *path, const char *buffer, size_t size, off_t offset, struct fuse_file_info *fi){
-	return osada_traverse(path, (char*) buffer, size, offset, TR_WRITE);
+	return osada_traverse(path, (char*) buffer, size, offset, fi, TR_WRITE);
 }
