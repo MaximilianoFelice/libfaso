@@ -4,7 +4,6 @@
  *  Created on: 8 sep. 2016
  *      Author: maximilianofelice
  */
-#include "../osada.h"
 #include "commons.h"
 
 static const char *hello_str = "Hello World!\n";
@@ -76,16 +75,6 @@ osada_block_pointer link_block(osada_block_pointer *from){
 	return p;
 }
 
-void iterate_blocks(osada_file* file, int(*_continue)(osada_block_pointer*, int)){
-	osada_block_pointer *p = &(file->first_block);
-
-	int count = 0;
-	while(_continue(p, count) > 0 && *p != LAST_BLOCK){
-		p = ALLOC_TABLE + *p;
-		count++;
-	}
-
-}
 
 osada_block_pointer *find_last_block(osada_file *file){
 	osada_block_pointer *p = NULL;

@@ -118,6 +118,17 @@ int osada_create_file(const char* path, osada_file_state type){
 	return 0;
 }
 
+void iterate_blocks(osada_file* file, int(*_continue)(osada_block_pointer*, int)){
+	osada_block_pointer *p = &(file->first_block);
+
+	int count = 0;
+	while(_continue(p, count) > 0 && *p != LAST_BLOCK){
+		p = ALLOC_TABLE + *p;
+		count++;
+	}
+
+}
+
 int osada_delete_file(const char* path){
 	errno_clear;
 
@@ -134,6 +145,15 @@ int osada_delete_file(const char* path){
 
 	osada_file *file = FILE_TABLE + block;
 	file->state = DELETED;
+
+	int _free_block(osada_block_pointer *p, int count){
+		if (*p == LAST_BLOCK) return 0;
+		bitarray_clean_bit(bitmap, *p);
+		return 1;
+	}
+
+	iterate_blocks(file, _free_block);
+	handle_return("Couldn't free blocks on file");
 
 	return 0;
 }
