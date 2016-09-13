@@ -132,8 +132,8 @@ int osada_traverse(const char *path, char* buffer, size_t size, off_t offset,
 	off_t position = offset;
 
 	int _is_required_node(){
-		if (	position > (offset - disk->block_size) ||
-				position < (size + offset)) return 1;
+		if (	(int) position > ((int)offset - (int)disk->block_size) &&
+				(int) position <= ((int)size + (int)offset)) return 1;
 		else return 0;
 	}
 
@@ -156,9 +156,9 @@ int osada_traverse(const char *path, char* buffer, size_t size, off_t offset,
 
 		if (_is_required_node() && _continue_linking(p)){
 			if (TEST_FLAG(mode, TR_WRITE))
-				left_to_operate -= block_fill((char*) DATA + *p, buffer + operated, _size_to_operate(), position % OSADA_BLOCK_SIZE);
+				left_to_operate -= block_fill((char*) (DATA + *p), buffer + operated, _size_to_operate(), position % OSADA_BLOCK_SIZE);
 			else
-				left_to_operate -= block_fill(buffer + operated, (char*) DATA + *p, _size_to_operate(), position % OSADA_BLOCK_SIZE);
+				left_to_operate -= block_fill(buffer + operated, (char*) (DATA + *p), _size_to_operate(), position % OSADA_BLOCK_SIZE);
 
 			operated = size - left_to_operate;
 			return 1;
