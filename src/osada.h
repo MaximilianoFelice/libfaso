@@ -21,7 +21,7 @@
 #include "utils/errors.h"
 #include "../osada-tools/osada.h"
 #include "utils/fuseopts.h"
-#include "collections/iterable.h"
+//#include "collections/iterable.h"
 
 /*
  * Este es el path de nuestro, relativo al punto de montaje, archivo dentro del FS
@@ -34,13 +34,15 @@
 
 #define sizeof_member(type, member) sizeof(((type *)0)->member)
 
+/*
 typedef struct OsadaZones {
 	iterable* file_table;
 } OsadaZones;
+*/
 
 extern Disk* disk;
 extern t_bitarray* bitmap;
-extern OsadaZones zones;
+// extern OsadaZones zones;
 
 enum {
 	DISK_HEADER,
