@@ -57,3 +57,7 @@ Debug/*
 
 # Test Folder
 test-files/*
+
+
+# Release folder
+release/*
