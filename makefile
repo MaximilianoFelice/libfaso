@@ -40,5 +40,9 @@ osada-fs: 	$(RELEASE)/errors.o 	\
 	$(CC) $(CFLAGS) $(DEFS) -o $(RELEASE)/osada-fs $^ $(LIBS)
 			
 
+test: osada-fs
+	$(CC) $(CFLAGS) $(DEFS) -o $(RELEASE)/test tests/dirspec.c $(LIBS) -lcspecs
+	./release/test
+	
 clean:
 	$(RM) $(RELEASE)/*.o $(RELEASE)/osada-fs
