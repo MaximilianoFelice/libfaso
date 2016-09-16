@@ -17,13 +17,18 @@
 #include <fcntl.h>
 #include <string.h>
 #include <stdlib.h>
+#include "fs-defs.h"
 
 #define STRINGIFY(x)	#x
 #define MACRO(x)    STRINGIFY(x)
 
+const char *mountpoint = MACRO(_MOUNTPOINT);
+const int max_dir_entries = _MAX_DIR_ENTRIES;
+const int max_file_name_length = _FILE_NAME_MAX_LENGTH;
+
 /* Common operations */
 DIR *open_dir(){
-	return opendir(MACRO(MOUNTPOINT));
+	return opendir(mountpoint);
 }
 
 int dir_count(){
@@ -68,7 +73,7 @@ int mk_dir(char* dir_name){
 }
 
 int rm_file(char* dir_name){
-	char* dup = strdup(MACRO(MOUNTPOINT));
+	char* dup = strdup(mountpoint);
 	int length = strlen(dup) + strlen(dir_name) + 1;
 	char* dir = malloc(length);
 
@@ -111,20 +116,20 @@ context (dirspec) {
         	should_bool(dir_match(2, ".", "..")) be equal to(true);
         } end
 
-		it("should be able to host up to MAXDIRENTRIES folders or files"){
+		it("should be able to host up to max_dir_entries folders or files"){
         	should_bool(dir_match(2, ".", "..")) be equal to(true);
-        	generate_names(MAXDIRENTRIES, mk_dir);
-        	should_int(dir_count()) be equal to(MAXDIRENTRIES + 2);
-        	generate_names(MAXDIRENTRIES, rm_file);
+        	generate_names(max_dir_entries, mk_dir);
+        	should_int(dir_count()) be equal to(max_dir_entries + 2);
+        	generate_names(max_dir_entries, rm_file);
         	should_bool(dir_match(2, ".", "..")) be equal to(true);
         } end
 
 		// TODO: Should the '\0' be counted as a char?
-		it("should be able create a file with FILENAMEMAXLENGTH chars"){
+		it("should be able create a file with max_file_name_length chars"){
         	should_bool(dir_match(2, ".", "..")) be equal to(true);
-        	char *name = malloc(FILENAMEMAXLENGTH);
-        	memset(name, 'a', FILENAMEMAXLENGTH);
-        	name[FILENAMEMAXLENGTH - 1] = '\0';
+        	char *name = malloc(max_file_name_length);
+        	memset(name, 'a', max_file_name_length);
+        	name[max_file_name_length - 1] = '\0';
         	errno = 0;
         	int res = mk_dir(name);
         	should_int(res) be equal to(0);
@@ -134,11 +139,11 @@ context (dirspec) {
         	should_bool(dir_match(2, ".", "..")) be equal to(true);
         } end
 
-		it("should NOT be able create a file with more than FILENAMEMAXLENGTH chars"){
+		it("should NOT be able create a file with more than max_file_name_length chars"){
         	should_bool(dir_match(2, ".", "..")) be equal to(true);
-        	char *name = malloc(FILENAMEMAXLENGTH + 1);
-        	memset(name, 'b', FILENAMEMAXLENGTH + 1);
-        	name[FILENAMEMAXLENGTH] = '\0';
+        	char *name = malloc(max_file_name_length + 1);
+        	memset(name, 'b', max_file_name_length + 1);
+        	name[max_file_name_length] = '\0';
         	errno = 0;
         	int res = mk_dir(name);
         	should_int(res) be equal to(-1);
@@ -148,13 +153,13 @@ context (dirspec) {
         	should_bool(dir_match(2, ".", "..")) be equal to(true);
         } end
 
-		it("should NOT be able to host more than MAXDIRENTRIES folders or files"){
+		it("should NOT be able to host more than max_dir_entries folders or files"){
 			should_bool(dir_match(2, ".", "..")) be equal to(true);
-			generate_names(MAXDIRENTRIES, mk_dir);
+			generate_names(max_dir_entries, mk_dir);
 			int res = mk_dir("extra");
 			should_int(res) be equal to(-1);
 			should_int(errno) be equal to(EDQUOT);
-			generate_names(MAXDIRENTRIES, rm_file);
+			generate_names(max_dir_entries, rm_file);
 			should_bool(dir_match(2, ".", "..")) be equal to(true);
 		} end
     } end

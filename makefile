@@ -7,7 +7,7 @@ LIBS=-lfuse -lcommons
 # Folders
 RELEASE=release
 
-all: releaseDir osada-fs
+all: releaseDir osada-fs compileTest
 
 releaseDir:
 	mkdir -p release
@@ -43,8 +43,8 @@ osada-fs: 	$(RELEASE)/errors.o 	\
 	$(CC) $(CFLAGS) $(DEFS) -o $(RELEASE)/osada-fs $^ $(LIBS)
 			
 
-compileTest:
-	$(CC) $(CFLAGS) $(DEFS) -DMOUNTPOINT='/tmp/fusea/' -DMAXDIRENTRIES=2048 -DFILENAMEMAXLENGTH=17 -o $(RELEASE)/test tests/dirspec.c $(LIBS) -lcspecs
+compileTest: tests/fs-defs.h
+	$(CC) $(CFLAGS) $(DEFS) -o $(RELEASE)/test tests/dirspec.c $(LIBS) -lcspecs
 	
 create:
 	mkdir -p /tmp/fusea
