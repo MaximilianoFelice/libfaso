@@ -16,58 +16,107 @@
 #include <sys/types.h>
 #include <fcntl.h>
 #include <string.h>
+#include <stdlib.h>
 
-#define STRINGIFY(x) #x
-#define MACRO(x)     STRINGIFY(x)
+#define STRINGIFY(x)	#x
+#define MACRO(x)    STRINGIFY(x)
 
+/* Common operations */
 DIR *open_dir(){
 	return opendir(MACRO(MOUNTPOINT));
 }
 
-int count_directories(){
+int dir_count(){
 	int count;
 	DIR *dir = open_dir();
 	for(count = 0; readdir(dir) != NULL; count++);
+	closedir(dir);
 	return count;
 }
 
-int directories_contains(char* dir_name){
+int dir_contains(char* dir_name){
 	DIR* dir = open_dir();
 	struct dirent *ent;
 	while((ent = readdir(dir)) != NULL)
-		if(strcmp(ent->d_name, dir_name) == 0) return 1;
+		if(strcmp(ent->d_name, dir_name) == 0) {
+			closedir(dir);
+			return 1;
+		}
+	closedir(dir);
 	return 0;
 }
 
 /**
  * 	Arguments should be distinct!!!
  */
-int directories_match(int num, ...){
+int dir_match(int num, ...){
 	va_list args;
 	va_start(args, num);
 
 	int count = 0;
-	while(directories_contains(va_arg(args, char*)) && count < num)
+	while(dir_contains(va_arg(args, char*)) && count < num)
 		count++;
-	return count == num;
+	return (count == num) && (count == dir_count());
 }
 
-int make_dir(char* dir_name){
+int mk_dir(char* dir_name){
 	DIR* dir = open_dir();
 	int fd = dirfd(dir);
-	return mkdirat(fd, dir_name, 0777);
+	int res = mkdirat(fd, dir_name, 0777);
+	closedir(dir);
+	return res;
+}
+
+int rm_file(char* dir_name){
+	char* dup = strdup(MACRO(MOUNTPOINT));
+	int length = strlen(dup) + strlen(dir_name) + 1;
+	char* dir = malloc(length);
+
+	memset(dir, 0, length);
+	memcpy(dir, dup, strlen(dup));
+	memcpy(dir + strlen(dup), dir_name, strlen(dir_name));
+
+	int res = remove(dir);
+
+	free(dup);
+	free(dir);
+
+	return res;
+}
+
+void generate_names(int count, int(operator)(char*)){
+	char *str = malloc(count);
+	for(int i = 0; i < count; i++) {
+		sprintf(str, "%d", i);
+		operator(str);
+	}
+	free(str);
 }
 
 context (dirspec) {
 
     describe("Directory Operations") {
         it("should read mountpoint folders") {
-        	should_bool(directories_match(2, ".", "..")) be equal to(true);
+        	should_bool(dir_match(2, ".", "..")) be equal to(true);
         } end
 
 		it("should be able to create new folders"){
-        	make_dir("dirent");
-        	should_bool(directories_match(3, ".", "..", "dirent")) be equal to(true);
+        	mk_dir("dirent");
+        	should_bool(dir_match(3, ".", "..", "dirent")) be equal to(true);
+        } end
+
+		it("should be able to delete folders"){
+        	rm_file("dirent");
+        	usleep(30000); // This is because the FS is not syncd
+        	should_bool(dir_match(2, ".", "..")) be equal to(true);
+        } end
+
+		it("should be able to host up to MAXDIRENTRIES folders or files"){
+        	should_bool(dir_match(2, ".", "..")) be equal to(true);
+        	generate_names(MAXDIRENTRIES, mk_dir);
+        	should_int(dir_count()) be equal to(MAXDIRENTRIES + 2);
+        	generate_names(MAXDIRENTRIES, rm_file);
+        	should_bool(dir_match(2, ".", "..")) be equal to(true);
         } end
     } end
 
