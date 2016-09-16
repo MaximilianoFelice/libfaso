@@ -119,6 +119,35 @@ context (dirspec) {
         	should_bool(dir_match(2, ".", "..")) be equal to(true);
         } end
 
+		it("should be able create a file with FILENAMEMAXLENGTH chars"){
+        	should_bool(dir_match(2, ".", "..")) be equal to(true);
+        	char *name = malloc(FILENAMEMAXLENGTH);
+        	memset(name, 'a', FILENAMEMAXLENGTH);
+        	name[FILENAMEMAXLENGTH - 1] = '\0';
+        	errno = 0;
+        	int res = mk_dir(name);
+        	should_int(res) be equal to(0);
+        	should_int(errno) be equal to(0);
+        	rm_file(name);
+        	usleep(30000); // This is because the FS is not syncd
+        	free(name);
+        	should_bool(dir_match(2, ".", "..")) be equal to(true);
+        } end
+
+		it("should NOT be able create a file with more than FILENAMEMAXLENGTH chars"){
+        	should_bool(dir_match(2, ".", "..")) be equal to(true);
+        	char *name = malloc(FILENAMEMAXLENGTH + 1);
+        	memset(name, 'b', FILENAMEMAXLENGTH + 1);
+        	name[FILENAMEMAXLENGTH] = '\0';
+        	errno = 0;
+        	int res = mk_dir(name);
+        	should_int(res) be equal to(-1);
+        	should_int(errno) be equal to(ENAMETOOLONG);
+        	usleep(30000); // This is because the FS is not syncd
+        	free(name);
+        	should_bool(dir_match(2, ".", "..")) be equal to(true);
+        } end
+
 		it("should NOT be able to host more than MAXDIRENTRIES folders or files"){
 			should_bool(dir_match(2, ".", "..")) be equal to(true);
 			generate_names(MAXDIRENTRIES, mk_dir);

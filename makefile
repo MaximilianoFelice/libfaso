@@ -44,7 +44,7 @@ osada-fs: 	$(RELEASE)/errors.o 	\
 			
 
 compileTest:
-	$(CC) $(CFLAGS) $(DEFS) -DMOUNTPOINT='/tmp/fusea/' -DMAXDIRENTRIES=2048 -o $(RELEASE)/test tests/dirspec.c $(LIBS) -lcspecs
+	$(CC) $(CFLAGS) $(DEFS) -DMOUNTPOINT='/tmp/fusea/' -DMAXDIRENTRIES=2048 -DFILENAMEMAXLENGTH=17 -o $(RELEASE)/test tests/dirspec.c $(LIBS) -lcspecs
 	
 create:
 	mkdir -p /tmp/fusea
