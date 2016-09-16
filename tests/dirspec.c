@@ -118,6 +118,16 @@ context (dirspec) {
         	generate_names(MAXDIRENTRIES, rm_file);
         	should_bool(dir_match(2, ".", "..")) be equal to(true);
         } end
+
+		it("should NOT be able to host more than MAXDIRENTRIES folders or files"){
+			should_bool(dir_match(2, ".", "..")) be equal to(true);
+			generate_names(MAXDIRENTRIES, mk_dir);
+			int res = mk_dir("extra");
+			should_int(res) be equal to(-1);
+			should_int(errno) be equal to(EDQUOT);
+			generate_names(MAXDIRENTRIES, rm_file);
+			should_bool(dir_match(2, ".", "..")) be equal to(true);
+		} end
     } end
 
 }

@@ -59,7 +59,10 @@ uint16_t file_for_path(const char* path){
 }
 
 int first_free_file(osada_file* table, uint16_t offset){
-	if (offset > OSADA_FILE_TABLE_ENTRIES) return -ENOENT;
+	if (offset >= OSADA_FILE_TABLE_ENTRIES) {
+		errno = -EDQUOT;
+		return NO_FILE;
+	}
 	else if (!is_file(table)) return offset;
 	else return first_free_file(table + 1, offset + 1);
 }
@@ -94,7 +97,7 @@ osada_file* create_file(osada_block_pointer first_block,
 	handle_return_null("Error: Probably found another file with that name");
 
 	uint16_t block = first_free_file(FILE_TABLE, 0);
-	handle_silent("Couldn't get free block");
+	handle_return_null("Couldn't get free block");
 
 	osada_file* dir = FILE_TABLE + block;
 

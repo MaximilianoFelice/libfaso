@@ -37,5 +37,7 @@ void _clear();
 #define handle_silent(msg) _handle(msg, errno, 1)
 #define handle_return_silent(msg) \
 	errno_ret(handle_silent(msg));
+#define handle_return_null_silent(msg) \
+	errno_ret2(handle_silent(msg), NULL);
 
 #endif /* SRC_UTILS_ERRORS_H_ */
