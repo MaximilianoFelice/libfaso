@@ -7,7 +7,10 @@ LIBS=-lfuse -lcommons
 # Folders
 RELEASE=release
 
-all: osada-fs
+all: releaseDir osada-fs
+
+releaseDir:
+	mkdir -p release
 
 $(RELEASE)/errors.o: src/utils/errors.c src/utils/errors.h
 	$(CC) $(CFLAGS) $(DEFS) -c src/utils/errors.c -o $(RELEASE)/errors.o
@@ -40,9 +43,27 @@ osada-fs: 	$(RELEASE)/errors.o 	\
 	$(CC) $(CFLAGS) $(DEFS) -o $(RELEASE)/osada-fs $^ $(LIBS)
 			
 
-test: osada-fs
-	$(CC) $(CFLAGS) $(DEFS) -o $(RELEASE)/test tests/dirspec.c $(LIBS) -lcspecs
+compileTest:
+	$(CC) $(CFLAGS) $(DEFS) -DMOUNTPOINT='/tmp/fusea' -o $(RELEASE)/test tests/dirspec.c $(LIBS) -lcspecs
+	
+create:
+	mkdir -p /tmp/fusea
+	./scripts/createDisk.sh 
+	cd osada-tools/ && make && cd ..
+	./osada-tools/osada-format disk.bin
+	cd osada-tools/ && make clean && cd ..
+	mv disk.bin release/disk.bin
+	
+mount: osada-fs
+	./release/osada-fs -d -o --ll='Trace' --Disc-Path=./release/disk.bin /tmp/fusea
+	
+umount:
+	fusermount -u /tmp/fusea
+	
+test: compileTest osada-fs runTest
+
+runTest:
 	./release/test
 	
 clean:
-	$(RM) $(RELEASE)/*.o $(RELEASE)/osada-fs
+	$(RM) -rf $(RELEASE)
