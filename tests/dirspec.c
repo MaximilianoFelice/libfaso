@@ -129,7 +129,6 @@ context (dirspec) {
         	should_int(res) be equal to(0);
         	should_int(errno) be equal to(0);
         	rm_file(name);
-        	usleep(30000); // This is because the FS is not syncd
         	free(name);
         	should_bool(dir_match(2, ".", "..")) be equal to(true);
         } end
