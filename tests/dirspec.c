@@ -119,6 +119,7 @@ context (dirspec) {
         	should_bool(dir_match(2, ".", "..")) be equal to(true);
         } end
 
+		// TODO: Should the '\0' be counted as a char?
 		it("should be able create a file with FILENAMEMAXLENGTH chars"){
         	should_bool(dir_match(2, ".", "..")) be equal to(true);
         	char *name = malloc(FILENAMEMAXLENGTH);
