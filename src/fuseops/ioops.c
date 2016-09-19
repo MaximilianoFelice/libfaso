@@ -6,28 +6,6 @@
  */
 #include "commons.h"
 
-static const char *hello_str = "Hello World!\n";
-static const char *hello_path = "/hello";
-
-int hello_read(const char *path, char *buf, size_t size, off_t offset,
-		      struct fuse_file_info *fi)
-{
-	size_t len;
-	(void) fi;
-	if(strcmp(path, hello_path) != 0)
-		return -ENOENT;
-
-	len = strlen(hello_str);
-	if (offset < len) {
-		if (offset + size > len)
-			size = len - offset;
-		memcpy(buf, hello_str + offset, size);
-	} else
-		size = 0;
-
-	return size;
-}
-
 int osada_mknod(const char *path, mode_t st_mode, dev_t type){
 	if (S_ISDIR(st_mode)) return osada_create_file(path, DIRECTORY);
 	else if (S_ISREG(st_mode)) return osada_create_file(path, REGULAR);
@@ -53,23 +31,23 @@ typedef uint16_t traverse_mode;
 #define TR_WRITE 0x2
 
 osada_block_pointer alloc_block(){
-	int block = 0;
+	int padding = bitmap_padding();
+	int block = padding;
 	while(bitarray_test_bit(bitmap, block)){
-		if (block > get_zone(disk, DISK_DATA)->size){
-			errno = -1;
+		block++;
+		if (block > disk->block_count){
+			errno = -EFBIG;
 			return LAST_BLOCK;
 		}
-		block++;
 	}
-
 	bitarray_set_bit(bitmap, block);
-	return block;
+	return block - padding;
 }
 
 osada_block_pointer link_block(osada_block_pointer *from){
 	if (*from != LAST_BLOCK) return errno = -1;
 	osada_block_pointer p = alloc_block();
-	handle_return("Disk is full");
+	handle_return_silent("Disk is full");
 	*from = p;
 	ALLOC_TABLE[p] = LAST_BLOCK;
 	return p;
@@ -131,8 +109,12 @@ int osada_traverse(const char *path, char* buffer, size_t size, off_t offset,
 		else if (*p != LAST_BLOCK) return 1;
 		else if (TEST_FLAG(mode, TR_WRITE)) {
 			link_block(p);
+			handle_return_silent("Cannot link block");
 			return 1;
-		} else return errno = -1;
+		} else {
+			errno = -1;
+			return 0;
+		}
 	}
 
 	size_t _size_to_operate(){
@@ -143,15 +125,19 @@ int osada_traverse(const char *path, char* buffer, size_t size, off_t offset,
 	int _operate(osada_block_pointer *p, int count){
 		position = count * disk->block_size;
 
-		if (_is_required_node() && _continue_linking(p)){
+		int link = _continue_linking(p);
+		if (errno != 0) return 0;
+
+		if (_is_required_node() && link){
 			if (TEST_FLAG(mode, TR_WRITE))
 				left_to_operate -= block_fill((char*) (DATA + *p), buffer + operated, _size_to_operate(), position % OSADA_BLOCK_SIZE);
 			else
 				left_to_operate -= block_fill(buffer + operated, (char*) (DATA + *p), _size_to_operate(), position % OSADA_BLOCK_SIZE);
 
 			operated = size - left_to_operate;
-			return 1;
-		} else return _continue_linking(p);
+		}
+
+		return link;
 	}
 
 
@@ -165,5 +151,6 @@ int osada_read(const char *path, char *buffer, size_t size, off_t offset, struct
 }
 
 int osada_write(const char *path, const char *buffer, size_t size, off_t offset, struct fuse_file_info *fi){
-	return osada_traverse(path, (char*) buffer, size, offset, fi, TR_WRITE);
+	int res = osada_traverse(path, (char*) buffer, size, offset, fi, TR_WRITE);
+	return res;
 }

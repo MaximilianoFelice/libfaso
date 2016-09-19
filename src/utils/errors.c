@@ -8,7 +8,7 @@
 
 int _handle(char* str, int err, int silent) {
 	if (err != 0) perror(str);
-	if (silent) errno_clear;
+	if (!silent) errno_clear;
 	return err;
 }
 

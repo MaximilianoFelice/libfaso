@@ -55,7 +55,7 @@ if [[ $1 != "" ]]
 then
 	cant=$1
 else
-	cant=10
+	cant=1
 fi
 
 echo "Creating $name of $cant MB"

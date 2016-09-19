@@ -94,10 +94,10 @@ osada_file* create_file(osada_block_pointer first_block,
 			errno_clear;
 			break;
 	}
-	handle_return_null("Error: Probably found another file with that name");
+	handle_return_null_silent("Error: Probably found another file with that name");
 
 	uint16_t block = first_free_file(FILE_TABLE, 0);
-	handle_return_null("Couldn't get free block");
+	handle_return_null_silent("Couldn't allocate a free entry on file table");
 
 	osada_file* dir = FILE_TABLE + block;
 
@@ -113,12 +113,16 @@ int osada_create_file(const char* path, osada_file_state type){
 	char* bname = basename(strdup(path));
 
 	uint16_t parent = file_for_path(dname);
-	handle_return("Cannot find block for dirname");
+	handle_return_silent("Cannot find block for dirname");
 
 	create_file(LAST_BLOCK, 0, (unsigned char*) bname, parent, time(NULL), type);
-	handle_return("Cannot create file");
+	handle_return_silent("Cannot create file");
 
 	return 0;
+}
+
+size_t bitmap_padding(){
+	return get_zone(disk, DISK_DATA)->offset;
 }
 
 void iterate_blocks(osada_file* file, int(*_continue)(osada_block_pointer*, int)){
@@ -149,9 +153,11 @@ int osada_delete_file(const char* path){
 	osada_file *file = FILE_TABLE + block;
 	file->state = DELETED;
 
+	size_t padding = bitmap_padding();
+
 	int _free_block(osada_block_pointer *p, int count){
 		if (*p == LAST_BLOCK) return 0;
-		bitarray_clean_bit(bitmap, *p);
+		bitarray_clean_bit(bitmap, *p + padding);
 		return 1;
 	}
 

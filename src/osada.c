@@ -22,8 +22,7 @@ void open_osada(){
 	add_disk_zone(disk, alloc_table_size(disk), IMPORTANT);
 	add_disk_zone(disk, HEADER->data_blocks, NORMAL);
 
-	int padding = get_zone(disk, DISK_DATA)->offset;
-	bitmap = bitarray_create((char*) BITMAP + padding, disk->block_count - padding);
+	bitmap = bitarray_create((char*) BITMAP, disk->block_count);
 }
 
 void load_zones(){
@@ -74,6 +73,7 @@ int main(int argc, char *argv[])
 
 	/* Registering signals */
 	signal(SIGTERM, unmount);
+	signal(SIGINT, unmount);
 	signal(SIGABRT, unmount);
 
 	/* Handling Options */
@@ -83,7 +83,7 @@ int main(int argc, char *argv[])
 
 	/* Unmounting previous FS */
 	fusermount(&args);
-	handle_silent("There's a mount at path that couldn't be unmount. Check that you set [MOUNTPOINT] as last parameter.");
+	handle("There's a mount at path that couldn't be unmount. Check that you set [MOUNTPOINT] as last parameter.");
 
 	/* Opening Disk */
 	open_osada();

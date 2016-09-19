@@ -55,7 +55,7 @@ create:
 	mv disk.bin release/disk.bin
 	
 mount: osada-fs
-	./release/osada-fs -d -o --ll='Trace' --Disc-Path=./release/disk.bin /tmp/fusea
+	./release/osada-fs -d -s -o --ll='Trace' --Disc-Path=./release/disk.bin /tmp/fusea
 	
 umount:
 	fusermount -u /tmp/fusea

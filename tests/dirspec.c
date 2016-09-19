@@ -25,6 +25,8 @@
 const char *mountpoint = MACRO(_MOUNTPOINT);
 const int max_dir_entries = _MAX_DIR_ENTRIES;
 const int max_file_name_length = _FILE_NAME_MAX_LENGTH;
+size_t max_file_size = _FILE_MAX_SIZE;
+const int block_size = _BLOCK_SIZE;
 
 /* Common operations */
 DIR *open_dir(){
@@ -42,13 +44,29 @@ int dir_count(){
 int dir_contains(char* dir_name){
 	DIR* dir = open_dir();
 	struct dirent *ent;
-	while((ent = readdir(dir)) != NULL)
+	while((ent = readdir(dir)) != NULL && dir_name != NULL)
 		if(strcmp(ent->d_name, dir_name) == 0) {
 			closedir(dir);
 			return 1;
 		}
 	closedir(dir);
 	return 0;
+}
+
+/**
+ * 	Should be freed!!!
+ */
+char *with_basename(const char* path){
+	char* dup = strdup(mountpoint);
+	int length = strlen(dup) + strlen(path) + 1;
+	char* res = malloc(length);
+
+	memset(res, 0, length);
+	memcpy(res, dup, strlen(dup));
+	memcpy(res + strlen(dup), path, strlen(path));
+
+	free(dup);
+	return res;
 }
 
 /**
@@ -59,7 +77,7 @@ int dir_match(int num, ...){
 	va_start(args, num);
 
 	int count = 0;
-	while(dir_contains(va_arg(args, char*)) && count < num)
+	while(count < num && dir_contains(va_arg(args, char*)))
 		count++;
 	return (count == num) && (count == dir_count());
 }
@@ -72,20 +90,18 @@ int mk_dir(char* dir_name){
 	return res;
 }
 
+int mk_file(char* file_name){
+	DIR* dir = open_dir();
+	int fd = dirfd(dir);
+	int res = mknodat(fd, file_name, 0777, 0);
+	closedir(dir);
+	return res;
+}
+
 int rm_file(char* dir_name){
-	char* dup = strdup(mountpoint);
-	int length = strlen(dup) + strlen(dir_name) + 1;
-	char* dir = malloc(length);
-
-	memset(dir, 0, length);
-	memcpy(dir, dup, strlen(dup));
-	memcpy(dir + strlen(dup), dir_name, strlen(dir_name));
-
+	char* dir = with_basename(dir_name);
 	int res = remove(dir);
-
-	free(dup);
 	free(dir);
-
 	return res;
 }
 
@@ -96,6 +112,33 @@ void generate_names(int count, int(operator)(char*)){
 		operator(str);
 	}
 	free(str);
+}
+
+int write_to_file(const char* file, char *buffer, size_t size){
+	char *path = with_basename(file);
+	int fd = open(path, O_RDWR);
+	int res = write(fd, buffer, size);
+	close(fd);
+	free(path);
+	return res;
+}
+
+int write_random_data(const char* file, size_t size){
+	char *buff = malloc(size);
+	memset(buff, 'c', size);
+	int res = write_to_file(file, buff, size);
+	free(buff);
+	return res;
+}
+
+size_t file_size(const char *file){
+	char *path = with_basename(file);
+	struct stat *stat = malloc(sizeof(struct stat));
+	int fd = open(path, O_RDWR);
+	fstat(fd, stat);
+	close(fd);
+	free(path);
+	return stat->st_size;
 }
 
 context (dirspec) {
@@ -148,8 +191,18 @@ context (dirspec) {
         	int res = mk_dir(name);
         	should_int(res) be equal to(-1);
         	should_int(errno) be equal to(ENAMETOOLONG);
-        	usleep(30000); // This is because the FS is not syncd
         	free(name);
+        	should_bool(dir_match(2, ".", "..")) be equal to(true);
+        } end
+
+		it("should create a file on folder"){
+        	should_bool(dir_match(2, ".", "..")) be equal to(true);
+        	errno = 0;
+        	mk_file("file");
+        	should_int(errno) be equal to(0);
+        	should_bool(dir_match(3, ".", "..", "file")) be equal to(true);
+        	rm_file("file");
+        	should_int(errno) be equal to(0);
         	should_bool(dir_match(2, ".", "..")) be equal to(true);
         } end
 
@@ -162,6 +215,34 @@ context (dirspec) {
 			generate_names(max_dir_entries, rm_file);
 			should_bool(dir_match(2, ".", "..")) be equal to(true);
 		} end
+
+		it("should be able to host a file of size MAXFILESIZE"){
+			should_bool(dir_match(2, ".", "..")) be equal to(true);
+			mk_file("fat");
+			should_bool(dir_match(3, ".", "..", "fat")) be equal to(true);
+			errno = 0;
+			write_random_data("fat", max_file_size);
+			should_int(errno) be equal to(0);
+			should_bool(dir_match(3, ".", "..", "fat")) be equal to(true);
+			should_int(file_size("fat")) be equal to(max_file_size);
+			rm_file("fat");
+			should_bool(dir_match(2, ".", "..")) be equal to(true);
+		} end
+
+		/*
+		it("should FAIL to host a file of size MAXFILESIZE + 1"){
+			should_bool(dir_match(2, ".", "..")) be equal to(true);
+			mk_file("fat");
+			errno = 0;
+			int res = write_random_data("fat", max_file_size + 1);
+			usleep(3000);
+			should_int(res) be equal to(-1);
+			should_int(errno) be equal to(EDQUOT);
+			usleep(3000);
+			rm_file("fat");
+			should_bool(dir_match(2, ".", "..")) be equal to(true);
+		} end
+		*/
     } end
 
 }
