@@ -22,7 +22,7 @@ void open_osada(){
 	add_disk_zone(disk, alloc_table_size(disk), IMPORTANT);
 	add_disk_zone(disk, HEADER->data_blocks, NORMAL);
 
-	bitmap = bitarray_create((char*) BITMAP, disk->block_count);
+	bitmap = bitarray_create_with_mode((char*) BITMAP, disk->block_count, MSB_FIRST);
 }
 
 void load_zones(){

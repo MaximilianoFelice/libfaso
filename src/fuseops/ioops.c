@@ -35,8 +35,8 @@ osada_block_pointer alloc_block(){
 	int block = padding;
 	while(bitarray_test_bit(bitmap, block)){
 		block++;
-		if (block > disk->block_count){
-			errno = -EFBIG;
+		if (block >= disk->block_count){
+			errno = -ENOSPC;
 			return LAST_BLOCK;
 		}
 	}
@@ -93,7 +93,6 @@ int osada_traverse(const char *path, char* buffer, size_t size, off_t offset,
 	} else errno=0;
 
 
-
 	off_t left_to_operate = size;
 	off_t operated = 0;
 	off_t position = offset;
@@ -109,8 +108,7 @@ int osada_traverse(const char *path, char* buffer, size_t size, off_t offset,
 		else if (*p != LAST_BLOCK) return 1;
 		else if (TEST_FLAG(mode, TR_WRITE)) {
 			link_block(p);
-			handle_return_silent("Cannot link block");
-			return 1;
+			return errno == 0;
 		} else {
 			errno = -1;
 			return 0;
@@ -137,20 +135,20 @@ int osada_traverse(const char *path, char* buffer, size_t size, off_t offset,
 			operated = size - left_to_operate;
 		}
 
-		return link;
+		return link && (left_to_operate > 0);
 	}
 
 
 	iterate_blocks(file, _operate);
-	handle_return("There was an error operating over blocks");
+	handle_return_silent("There was an error operating over blocks");
 
 	return operated;
+
 }
 int osada_read(const char *path, char *buffer, size_t size, off_t offset, struct fuse_file_info *fi){
 	return osada_traverse(path, buffer, size, offset, fi, TR_READ);
 }
 
 int osada_write(const char *path, const char *buffer, size_t size, off_t offset, struct fuse_file_info *fi){
-	int res = osada_traverse(path, (char*) buffer, size, offset, fi, TR_WRITE);
-	return res;
+	return osada_traverse(path, (char*) buffer, size, offset, fi, TR_WRITE);
 }

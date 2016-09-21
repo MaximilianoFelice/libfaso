@@ -206,6 +206,7 @@ context (dirspec) {
         	should_bool(dir_match(2, ".", "..")) be equal to(true);
         } end
 
+
 		it("should NOT be able to host more than max_dir_entries folders or files"){
 			should_bool(dir_match(2, ".", "..")) be equal to(true);
 			generate_names(max_dir_entries, mk_dir);
@@ -229,20 +230,15 @@ context (dirspec) {
 			should_bool(dir_match(2, ".", "..")) be equal to(true);
 		} end
 
-		/*
 		it("should FAIL to host a file of size MAXFILESIZE + 1"){
 			should_bool(dir_match(2, ".", "..")) be equal to(true);
 			mk_file("fat");
 			errno = 0;
 			int res = write_random_data("fat", max_file_size + 1);
-			usleep(3000);
-			should_int(res) be equal to(-1);
-			should_int(errno) be equal to(EDQUOT);
-			usleep(3000);
+			should_bool(res <= max_file_size) be truthy;
 			rm_file("fat");
 			should_bool(dir_match(2, ".", "..")) be equal to(true);
 		} end
-		*/
     } end
 
 }
